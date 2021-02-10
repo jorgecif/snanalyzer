@@ -14,7 +14,7 @@ matplotlib.use("Agg")
 import seaborn as sns
 
 # Parámetros
-activities = ["Seleccione", "Twitter-usuario","Twitter-término","Twitter-ciudad","EDA","Plot","Model Building","About", "test"]
+activities = ["Seleccione", "Twitter-usuario","Twitter-término","Twitter-localizacion","EDA","Plot","Model Building","About", "test"]
 
 #Funciones
 
@@ -46,7 +46,7 @@ def obtener_tweets (cuenta,palabra,f_ini, f_fin, captura):
     
     parametros_twitter="from:@"+cuenta_twitter+" + since:"+fecha_ini+" until:"+fecha_fin + " "+ palabras_clave
 
-    # Capturo tweets de un usuario en particular y almaceno en dataframe
+    # Capturo tweets de un usuario en particular y almaceno en diccionario
     for i,tweet in enumerate(sntwitter.TwitterSearchScraper(parametros_twitter).get_items()):
         if i > maxTweets :
             break
@@ -57,19 +57,77 @@ def obtener_tweets (cuenta,palabra,f_ini, f_fin, captura):
         captura['contenido'].append(tweet.content)
     return captura
 
+# Obtener tweets de término principal y otros asociados
+def obtener_tweets_de_termino(search,palabra,term_ppal, f_ini, f_fin, captura):
+    maxTweets = 5000
+    term_ppal=str(term_ppal)
+    palabra_clave=str(palabra)
+    fecha_ini=str(f_ini)
+    fecha_fin=str(f_fin)
+    parametros_twitter=search+" + since:"+fecha_ini+" until:"+fecha_fin
+    # Capturo tweets de un usuario en particular y almaceno en diccionario
+    for i,tweet in enumerate(sntwitter.TwitterSearchScraper(parametros_twitter).get_items()):
+        if i > maxTweets :
+            break
+        captura['username'].append(tweet.username)
+        captura['termino_ppal'].append(term_ppal)
+        captura['palabra_clave'].append(palabra_clave)
+        date=str(tweet.date.year)+"-"+str(tweet.date.month)+"-"+str(tweet.date.day)+" "+str(tweet.date.hour)+":"+str(tweet.date.minute)+":"+str(tweet.date.second)
+        captura['fecha'].append(date)
+        captura['contenido'].append(tweet.content)
+    return captura
+
+def obtener_tweets_de_loc_palabras(loc, radio,palabra, f_ini, f_fin, captura):
+#captura = {"username":[],"localizacion":[],"radio":[],"palabra_clave":[],"fecha":[],"contenido":[]}
+	maxTweets = 5000
+	loc=str(loc)
+	radio=str(radio)
+	palabra_clave=str(palabra)
+	fecha_ini=str(f_ini)
+	fecha_fin=str(f_fin)
+	localiza = loc + ", " + radio   # 
+	busqueda=palabra_clave+" + since:"+fecha_ini+" until:"+fecha_fin+' geocode:"{}"'
+	for i,tweet in enumerate(sntwitter.TwitterSearchScraper(busqueda.format(localiza)).get_items()):
+		if i > maxTweets :
+			break
+		captura['username'].append(tweet.username)
+		captura['localizacion'].append(loc)
+		captura['radio'].append(radio)
+		captura['palabra_clave'].append(palabra_clave)
+		date=str(tweet.date.year)+"-"+str(tweet.date.month)+"-"+str(tweet.date.day)+" "+str(tweet.date.hour)+":"+str(tweet.date.minute)+":"+str(tweet.date.second)
+		captura['fecha'].append(date)
+		captura['contenido'].append(tweet.content)
+	return captura
+
+    
+#	palabra_list=[]
+#	df2 = pd.DataFrame()
+#	scraped_tweets = sntwitter.TwitterSearchScraper(search).get_items()
+#	sliced_scraped_tweets = itertools.islice(scraped_tweets, cantidad_tweets)
+#	df2 = pd.DataFrame(sliced_scraped_tweets)[['date',"content","username", "url"]]
+#	if len(df2) == 0:
+#		return df2
+#	else:
+#		for i in range(0,len(df2)):
+#			palabra_list.append(palabra)
+#		df2["palabra"]=palabra_list
+#		return df2
+
+
 # Programa
 @provide_state
 def main(state):
 	st.title("Exploración de redes sociales")
 	state.inputs1 = state.inputs1 or set()
 	state.inputs2 = state.inputs2 or set()
-	choice = st.sidebar.selectbox("Seleccione la red social de su interés",activities)
+	choice = st.sidebar.selectbox("Seleccione el análisis de su interés",activities)
 
 	if choice == "Seleccione":
 		st.subheader("Seleccione una de las opciones en el menú lateral")
 
 	elif choice == "Twitter-usuario":
-     
+		st.subheader("Obtiene tweets cruzados de una lista de usuarios y de una lista de palabras clave")
+
 		# ------ Input datos de usuarios
 		st.subheader("Usuarios")
 
@@ -100,7 +158,6 @@ def main(state):
 		c4.selectbox("Palabras agregadas", options=list(state.inputs2), index=last_index2)
 		lista_palabras=list(state.inputs2)
 		palabras_busqueda = st.multiselect("Seleccionar palabras",lista_palabras)
-		st.write(cuentas_twitter, palabras_busqueda)
 		# -----------------------------------
 		# ------ Input fechas
 		st.subheader("Rango de fechas")
@@ -111,6 +168,15 @@ def main(state):
 
 		f_ini = c5.date_input('Fecha inicio', today)
 		f_fin = c6.date_input('Fecha final', tomorrow)
+
+
+		st.subheader("Detalles de la consulta")
+		c5, c6 = st.beta_columns([1, 1])
+		c5.markdown('**Usuarios**.')
+		c6.markdown('**Palabras clave**.')
+		c5.write(cuentas_twitter)
+		c6.write(palabras_busqueda)
+
 
 		if f_ini < f_fin:
 			st.success('Fecha inicio: `%s`\n\nFecha final:`%s`' % (f_ini, f_fin))
@@ -153,9 +219,200 @@ def main(state):
 			ax2=sns.countplot(y="palabra", hue="username", data=df1)   
 			col2.pyplot(fig2)
 
+	elif choice == 'Twitter-término':
+		st.subheader("Obtiene tweets cruzados entre un término principal y una lista de palabras clave")
 
+		# ------ Input término principal
+		st.subheader("Término principal")
 
+		c1, c2 = st.beta_columns([2, 1])
+		input_string = c1.text_input("Agregar término")
+		state.inputs1.add(input_string)
+
+        # Obtiene el estado anterior del index
+		last_index1 = len(state.inputs1) - 1 if state.inputs1 else None
+
+        # Selecciono la última entrada de acuerdo al index
+		c2.selectbox("Término principal agregado", options=list(state.inputs1), index=last_index1)
+		lista_term_ppal=list(state.inputs1)
+		terminos_ppales = st.multiselect("Seleccionar términos",lista_term_ppal)
 		# -----------------------------------
+  
+		# ------ Input palabras clave
+		st.subheader("Palabras clave")
+
+		c3, c4 = st.beta_columns([2, 1])
+		input_string2 = c3.text_input("Agregar palabra")
+		state.inputs2.add(input_string2)
+
+        # Obtiene el estado anterior del index
+		last_index2 = len(state.inputs2) - 1 if state.inputs2 else None
+
+        # Selecciono la última entrada de acuerdo al index
+		c4.selectbox("Palabras agregadas", options=list(state.inputs2), index=last_index2)
+		lista_palabras=list(state.inputs2)
+		palabras_busqueda = st.multiselect("Seleccionar palabras",lista_palabras)
+		# -----------------------------------
+		# ------ Input fechas
+		st.subheader("Rango de fechas")
+		
+		today = datetime.date.today()
+		tomorrow = today + datetime.timedelta(days=1)
+		c5, c6 = st.beta_columns([1, 1])
+
+		f_ini = c5.date_input('Fecha inicio', today)
+		f_fin = c6.date_input('Fecha final', tomorrow)
+
+		st.subheader("Detalles de la consulta")
+		c5, c6 = st.beta_columns([1, 1])
+		c5.markdown('**Término principal**.')
+		c6.markdown('**Palabras clave**.')
+		c5.write(terminos_ppales)
+		c6.write(palabras_busqueda)
+
+		if f_ini < f_fin:
+			st.success('Fecha inicio: `%s`\n\nFecha final:`%s`' % (f_ini, f_fin))
+		else:
+			st.error('Error: La fecha final debe ir después de la fecha inicial.')
+		# -----------------------------------
+
+		# ------- Botón analizar
+		if st.button('Extraer tweets'):
+			# Itero y aplico función
+			captura = {"username":[],"termino_ppal":[],"palabra_clave":[],"fecha":[],"contenido":[]}
+
+			for i in range(0,len(terminos_ppales)):
+				for j in range(0,len(palabras_busqueda)):
+					termino_ppal_analizar=terminos_ppales[i]
+					palabra=palabras_busqueda[j]
+					search=termino_ppal_analizar + ' + ' + palabra 
+					captura=obtener_tweets_de_termino(search,palabra, termino_ppal_analizar, f_ini, f_fin, captura)
+					time.sleep(5)
+
+			df1=pd.DataFrame.from_dict(captura) 
+			st.write('Se encontraron ', len(df1), " tweets")
+  			# Imprimo resultado
+			st.dataframe(df1.head())
+			df = df1 # your dataframe
+			st.markdown(get_table_download_link(df), unsafe_allow_html=True)
+			# Gráficas
+			fig, ax = plt.subplots()
+			ax=sns.countplot("username", data=df)
+			st.pyplot(fig)
+
+			col1, col2 = st.beta_columns(2)
+			col1.subheader("Término principal - Palabra")
+			fig, ax = plt.subplots()
+			ax=sns.countplot(y="termino_ppal", hue="palabra_clave", data=df1)
+			col1.pyplot(fig)
+			col2.subheader("Palabra - Usuario")
+			fig2, ax2 = plt.subplots()
+			ax2=sns.countplot(y="palabra_clave", hue="termino_ppal", data=df1)   
+			col2.pyplot(fig2)
+   
+			# Parametros
+#			palabras_busqueda = ['seguridad', "educacion", "participacion", "delito", "crimen", "colegio"]
+#			cantidad_tweets=100
+#			termino_principal = '"localidad suba"'
+#			df2 = pd.DataFrame()
+#
+#			# Itero y aplico función
+#			for i in range(0,len(palabras_busqueda)):
+#				palabra=palabras_busqueda[i]
+#				search=termino_principal + ' + ' + palabra 
+#				dataframe=obtener_tweets_de_termino(search,cantidad_tweets,palabra)
+#				df2=df2.append(dataframe, ignore_index = True) 
+#				print(search)
+#				time.sleep(5)
+#
+		# -----------------------------------
+	elif choice == 'Twitter-localizacion':
+		st.subheader("Obtiene tweets de una localización y con una lista de palabras clave")
+
+		# ------ Input coordenadas y radio
+		st.subheader("Localización")
+
+		c1, c2, c3 = st.beta_columns([1, 1,1])
+		input_lat = c1.text_input("Latitud")
+		input_long = c2.text_input("Longitud")
+		input_radio = c3.text_input("Radio")
+
+		# ------ Input palabras clave
+		st.subheader("Palabras clave")
+
+		c3, c4 = st.beta_columns([2, 1])
+		input_string2 = c3.text_input("Agregar palabra")
+		state.inputs2.add(input_string2)
+
+        # Obtiene el estado anterior del index
+		last_index2 = len(state.inputs2) - 1 if state.inputs2 else None
+
+        # Selecciono la última entrada de acuerdo al index
+		c4.selectbox("Palabras agregadas", options=list(state.inputs2), index=last_index2)
+		lista_palabras=list(state.inputs2)
+		palabras_busqueda = st.multiselect("Seleccionar palabras",lista_palabras)
+  
+		# -----------------------------------
+		# ------ Input fechas
+		st.subheader("Rango de fechas")
+		
+		today = datetime.date.today()
+		tomorrow = today + datetime.timedelta(days=1)
+		c5, c6 = st.beta_columns([1, 1])
+
+		f_ini = c5.date_input('Fecha inicio', today)
+		f_fin = c6.date_input('Fecha final', tomorrow)
+
+		st.subheader("Detalles de la consulta")
+		c5, c6, c7 = st.beta_columns([1, 1, 1] )
+		c5.markdown('**Latitud**.')
+		c6.markdown('**Longitud**.')
+		c7.markdown('**Radio**.')
+		c5.write(input_lat)
+		c6.write(input_long)
+		c7.write(input_radio)
+		if f_ini < f_fin:
+			st.success('Fecha inicio: `%s`\n\nFecha final:`%s`' % (f_ini, f_fin))
+		else:
+			st.error('Error: La fecha final debe ir después de la fecha inicial.')
+		# -----------------------------------
+
+		# ------- Botón analizar
+		if st.button('Extraer tweets'):
+			# Itero y aplico función
+			captura = {"username":[],"localizacion":[],"radio":[],"palabra_clave":[],"fecha":[],"contenido":[]}
+			loc=str(input_lat)+", "+str(input_long)
+			radio=str(input_radio)
+
+			# Itero y aplico función
+			for i in range(0,len(palabras_busqueda)):
+				palabra=palabras_busqueda[i]
+				captura=obtener_tweets_de_loc_palabras(loc, radio,palabra,f_ini, f_fin,captura)
+				time.sleep(5)
+
+			df1=pd.DataFrame.from_dict(captura) 
+			st.write('Se encontraron ', len(df1), " tweets")
+  			# Imprimo resultado
+			st.dataframe(df1.head())
+			df = df1 # your dataframe
+			st.markdown(get_table_download_link(df), unsafe_allow_html=True)
+
+			# Gráficas
+			fig, ax = plt.subplots()
+			ax=sns.countplot("username", data=df)
+			st.pyplot(fig)
+
+			col1, col2 = st.beta_columns(2)
+
+			col1.subheader("Usuario - Palabra")
+			fig, ax = plt.subplots()
+			ax=sns.countplot(y="username", hue="palabra_clave", data=df1)
+			col1.pyplot(fig)
+
+			col2.subheader("Palabra - Usuario")
+			fig2, ax2 = plt.subplots()
+			ax2=sns.countplot(y="palabra_clave", hue="username", data=df1)   
+			col2.pyplot(fig2)
 	elif choice == 'test':
 		arr = np.random.normal(1, 1, size=100)
 		fig, ax = plt.subplots()
