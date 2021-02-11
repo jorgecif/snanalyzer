@@ -2,7 +2,7 @@ streamlit==0.75.0
 prometheus_client==0.9.0
 snscrape==0.3.4
 seaborn==0.11.1
-pandas==1.2.1
+pandas==1.1.5
 numpy==1.19.5
 matplotlib==3.3.3
 facebook_scraper==0.2.19
