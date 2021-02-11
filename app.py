@@ -180,6 +180,13 @@ def main(state):
 	st.title("Exploración de redes sociales")
 	state.inputs1 = state.inputs1 or set()
 	state.inputs2 = state.inputs2 or set()
+	state.inputs3 = state.inputs3 or set()
+	state.inputs4 = state.inputs4 or set()
+	state.inputs5 = state.inputs5 or set()
+	state.inputs6 = state.inputs6 or set()
+	state.inputs7 = state.inputs7 or set()
+
+
 	image = Image.open('logo.png')
 	st.sidebar.image(image, use_column_width=False)
 	choice = st.sidebar.selectbox("Seleccione el análisis de su interés",activities)
@@ -194,8 +201,8 @@ def main(state):
 		st.subheader("Usuarios")
 
 		c1, c2 = st.beta_columns([2, 1])
-		input_string = c1.text_input("Agregar usuario")
-		state.inputs1.add(input_string)
+		input_string1 = c1.text_input("Agregar usuario")
+		state.inputs1.add(input_string1)
 
         # Obtiene el estado anterior del index
 		last_index1 = len(state.inputs1) - 1 if state.inputs1 else None
@@ -218,8 +225,8 @@ def main(state):
 
         # Selecciono la última entrada de acuerdo al index
 		c4.selectbox("Palabras agregadas", options=list(state.inputs2), index=last_index2)
-		lista_palabras=list(state.inputs2)
-		palabras_busqueda = st.multiselect("Seleccionar palabras",lista_palabras)
+		lista_palabras1=list(state.inputs2)
+		palabras_busqueda1 = st.multiselect("Seleccionar palabras",lista_palabras1)
 		# -----------------------------------
 		# ------ Input fechas
 		st.subheader("Rango de fechas")
@@ -237,7 +244,7 @@ def main(state):
 		c5.markdown('**Usuarios**.')
 		c6.markdown('**Palabras clave**.')
 		c5.write(cuentas_twitter)
-		c6.write(palabras_busqueda)
+		c6.write(palabras_busqueda1)
 
 
 		if f_ini < f_fin:
@@ -252,9 +259,9 @@ def main(state):
 			captura = {"username":[],"palabra":[],"fecha":[],"contenido":[],"url":[]}
 
 			for i in range(0,len(cuentas_twitter)):
-				for j in range(0,len(palabras_busqueda)):
+				for j in range(0,len(palabras_busqueda1)):
 					cuenta=cuentas_twitter[i]
-					palabra=palabras_busqueda[j]
+					palabra=palabras_busqueda1[j]
 					captura=obtener_tweets(cuenta,palabra,f_ini, f_fin, captura)
 					time.sleep(5)
 
@@ -287,16 +294,16 @@ def main(state):
 		# ------ Input término principal
 		st.subheader("Término principal")
 
-		c1, c2 = st.beta_columns([2, 1])
-		input_string = c1.text_input("Agregar término")
-		state.inputs1.add(input_string)
+		c1_1, c1_2 = st.beta_columns([2, 1])
+		input_string3 = c1_1.text_input("Agregar término")
+		state.inputs3.add(input_string3)
 
         # Obtiene el estado anterior del index
-		last_index1 = len(state.inputs1) - 1 if state.inputs1 else None
+		last_index3 = len(state.inputs3) - 1 if state.inputs3 else None
 
         # Selecciono la última entrada de acuerdo al index
-		c2.selectbox("Término principal agregado", options=list(state.inputs1), index=last_index1)
-		lista_term_ppal=list(state.inputs1)
+		c1_2.selectbox("Término principal agregado", options=list(state.inputs3), index=last_index3)
+		lista_term_ppal=list(state.inputs3)
 		terminos_ppales = st.multiselect("Seleccionar términos",lista_term_ppal)
 		# -----------------------------------
   
@@ -304,16 +311,16 @@ def main(state):
 		st.subheader("Palabras clave")
 
 		c3, c4 = st.beta_columns([2, 1])
-		input_string2 = c3.text_input("Agregar palabra")
-		state.inputs2.add(input_string2)
+		input_string4 = c3.text_input("Agregar palabra")
+		state.inputs4.add(input_string4)
 
         # Obtiene el estado anterior del index
-		last_index2 = len(state.inputs2) - 1 if state.inputs2 else None
+		last_index4 = len(state.inputs4) - 1 if state.inputs4 else None
 
         # Selecciono la última entrada de acuerdo al index
-		c4.selectbox("Palabras agregadas", options=list(state.inputs2), index=last_index2)
-		lista_palabras=list(state.inputs2)
-		palabras_busqueda = st.multiselect("Seleccionar palabras",lista_palabras)
+		c4.selectbox("Palabras agregadas", options=list(state.inputs4), index=last_index4)
+		lista_palabras2=list(state.inputs4)
+		palabras_busqueda2 = st.multiselect("Seleccionar palabras",lista_palabras2)
 		# -----------------------------------
 		# ------ Input fechas
 		st.subheader("Rango de fechas")
@@ -330,7 +337,7 @@ def main(state):
 		c5.markdown('**Término principal**.')
 		c6.markdown('**Palabras clave**.')
 		c5.write(terminos_ppales)
-		c6.write(palabras_busqueda)
+		c6.write(palabras_busqueda2)
 
 		if f_ini < f_fin:
 			st.success('Fecha inicio: `%s`\n\nFecha final:`%s`' % (f_ini, f_fin))
@@ -344,9 +351,9 @@ def main(state):
 			captura = {"username":[],"termino_ppal":[],"palabra_clave":[],"fecha":[],"contenido":[],"url":[]}
 
 			for i in range(0,len(terminos_ppales)):
-				for j in range(0,len(palabras_busqueda)):
+				for j in range(0,len(palabras_busqueda2)):
 					termino_ppal_analizar=terminos_ppales[i]
-					palabra=palabras_busqueda[j]
+					palabra=palabras_busqueda2[j]
 					search=termino_ppal_analizar + ' + ' + palabra 
 					captura=obtener_tweets_de_termino(search,palabra, termino_ppal_analizar, f_ini, f_fin, captura)
 					time.sleep(5)
@@ -403,16 +410,16 @@ def main(state):
 		st.subheader("Palabras clave")
 
 		c3_4, c3_5 = st.beta_columns([2, 1])
-		input_string2 = c3_4.text_input("Agregar palabra")
-		state.inputs2.add(input_string2)
+		input_string5 = c3_4.text_input("Agregar palabra")
+		state.inputs5.add(input_string5)
 
         # Obtiene el estado anterior del index
-		last_index2 = len(state.inputs2) - 1 if state.inputs2 else None
+		last_index5 = len(state.inputs5) - 1 if state.inputs5 else None
 
         # Selecciono la última entrada de acuerdo al index
-		c3_5.selectbox("Palabras agregadas", options=list(state.inputs2), index=last_index2)
-		lista_palabras=list(state.inputs2)
-		palabras_busqueda = st.multiselect("Seleccionar palabras",lista_palabras)
+		c3_5.selectbox("Palabras agregadas", options=list(state.inputs5), index=last_index5)
+		lista_palabras3=list(state.inputs5)
+		palabras_busqueda = st.multiselect("Seleccionar palabras",lista_palabras3)
   
 		# -----------------------------------
 		# ------ Input fechas
@@ -492,16 +499,16 @@ def main(state):
 		st.subheader("Palabras clave")
 
 		c4_4, c4_5 = st.beta_columns([2, 1])
-		input_string2 = c4_4.text_input("Agregar palabra")
-		state.inputs2.add(input_string2)
+		input_string6 = c4_4.text_input("Agregar palabra")
+		state.inputs6.add(input_string6)
 
         # Obtiene el estado anterior del index
-		last_index2 = len(state.inputs2) - 1 if state.inputs2 else None
+		last_index6 = len(state.inputs6) - 1 if state.inputs6 else None
 
         # Selecciono la última entrada de acuerdo al index
-		c4_5.selectbox("Palabras agregadas", options=list(state.inputs2), index=last_index2)
-		lista_palabras=list(state.inputs2)
-		palabras_busqueda = st.multiselect("Seleccionar palabras",lista_palabras)
+		c4_5.selectbox("Palabras agregadas", options=list(state.inputs6), index=last_index6)
+		lista_palabras4=list(state.inputs6)
+		palabras_busqueda = st.multiselect("Seleccionar palabras",lista_palabras4)
   
 		# -----------------------------------
 		# ------ Input fechas
@@ -577,15 +584,15 @@ def main(state):
 
 		c1, c2 = st.beta_columns([2, 1])
 		input_string = c1.text_input("Agregar usuario")
-		state.inputs1.add(input_string)
+		state.inputs7.add(input_string)
 
         # Obtiene el estado anterior del index
-		last_index1 = len(state.inputs1) - 1 if state.inputs1 else None
+		last_index7 = len(state.inputs7) - 1 if state.inputs7 else None
 
         # Selecciono la última entrada de acuerdo al index
-		c2.selectbox("Usuarios agregados", options=list(state.inputs1), index=last_index1)
-		lista_cuentas=list(state.inputs1)
-		cuentas_fb = st.multiselect("Seleccionar usuarios",lista_cuentas)
+		c2.selectbox("Usuarios agregados", options=list(state.inputs7), index=last_index7)
+		lista_cuentas5=list(state.inputs7)
+		cuentas_fb = st.multiselect("Seleccionar usuarios",lista_cuentas5)
 		# -----------------------------------
 		# ------ Input páginas
 		paginas=st.text_input("Paginas")
