@@ -13,10 +13,25 @@ import matplotlib
 matplotlib.use("Agg")
 import seaborn as sns
 from facebook_scraper import get_posts
-
+from PIL import Image
 
 # Parámetros
-activities = ["Seleccione", "Twitter-usuario","Twitter-término","Twitter-localizacion","Facebook","About"]
+activities = ["Seleccione", "Twitter-usuario","Twitter-término","Twitter-coordenadas","Twitter-ciudad","Facebook","Créditos"]
+st.set_page_config(
+	page_title="Social network analyzer",
+	page_icon="random",
+	layout="centered",
+	initial_sidebar_state="expanded",
+	)
+
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
+
 
 #Funciones
 
@@ -85,7 +100,7 @@ def obtener_tweets_de_loc_palabras(loc, radio,palabra, f_ini, f_fin, captura):
 #captura = {"username":[],"localizacion":[],"radio":[],"palabra_clave":[],"fecha":[],"contenido":[]}
 	maxTweets = 5000
 	loc=str(loc)
-	radio=str(radio)+"km"
+	radio=str(radio)
 	palabra_clave=str(palabra)
 	fecha_ini=str(f_ini)
 	fecha_fin=str(f_fin)
@@ -101,8 +116,32 @@ def obtener_tweets_de_loc_palabras(loc, radio,palabra, f_ini, f_fin, captura):
 		date=str(tweet.date.year)+"-"+str(tweet.date.month)+"-"+str(tweet.date.day)+" "+str(tweet.date.hour)+":"+str(tweet.date.minute)+":"+str(tweet.date.second)
 		captura['fecha'].append(date)
 		captura['contenido'].append(tweet.content)
-        captura['url'].append(tweet.url)
+		captura['url'].append(tweet.url)
 	return captura
+
+def obtener_tweets_de_ciudad_palabras(ciudad_busqueda, radio,palabra, f_ini, f_fin, captura):
+#captura = {"username":[],"localizacion":[],"radio":[],"palabra_clave":[],"fecha":[],"contenido":[]}
+	maxTweets = 5000
+	ciudad_busqueda=str(ciudad_busqueda)
+	radio=str(radio)
+	palabra_clave=str(palabra)
+	fecha_ini=str(f_ini)
+	fecha_fin=str(f_fin)
+	busqueda=palabra_clave+" since:"+fecha_ini+" until:"+fecha_fin+" near:"+ciudad_busqueda+" within:"+radio
+	for i,tweet in enumerate(sntwitter.TwitterSearchScraper(busqueda).get_items()):
+		if i > maxTweets :
+			break
+		captura['username'].append(tweet.username)
+		captura['localizacion'].append(ciudad_busqueda)
+		captura['radio'].append(radio)
+		captura['palabra_clave'].append(palabra_clave)
+		date=str(tweet.date.year)+"-"+str(tweet.date.month)+"-"+str(tweet.date.day)+" "+str(tweet.date.hour)+":"+str(tweet.date.minute)+":"+str(tweet.date.second)
+		captura['fecha'].append(date)
+		captura['contenido'].append(tweet.content)
+		captura['url'].append(tweet.url)
+	return captura
+
+
 def obtener_post_facebook(cuenta_fb, paginas,captura):
 	#captura = {"username":[],"post_id":[],"textos":[],"date":[],"likes":[],"coments":[],"shares":[],"url":[]}
 	maxPosts = 3000
@@ -141,6 +180,8 @@ def main(state):
 	st.title("Exploración de redes sociales")
 	state.inputs1 = state.inputs1 or set()
 	state.inputs2 = state.inputs2 or set()
+	image = Image.open('logo.png')
+	st.sidebar.image(image, use_column_width=False)
 	choice = st.sidebar.selectbox("Seleccione el análisis de su interés",activities)
 
 	if choice == "Seleccione":
@@ -347,29 +388,29 @@ def main(state):
 #				time.sleep(5)
 #
 		# -----------------------------------
-	elif choice == 'Twitter-localizacion':
-		st.subheader("Obtiene tweets de una localización y con una lista de palabras clave")
+	elif choice == 'Twitter-coordenadas':
+		st.subheader("Obtiene tweets de un punto central en unas coordenadas con un radio R y asociadas a una lista de palabras clave")
 
 		# ------ Input coordenadas y radio
 		st.subheader("Localización")
 
-		c1, c2, c3 = st.beta_columns([1, 1,1])
-		input_lat = c1.text_input("Latitud - Ej: 4.74075")
-		input_long = c2.text_input("Longitud - Ej: -74.08417"), 
-		input_radio = c3.text_input("Radio en km - Ej: 4")
+		c3_1, c3_2, c3_3 = st.beta_columns([1, 1, 1])
+		inputLat = c3_1.text_input("Latitud - Ej: 4.74075")
+		inputLong = c3_2.text_input("Longitud - Ej: -74.08417")
+		inputRadio = c3_3.text_input("Radio en km - Ej: 4")+"km"
 
 		# ------ Input palabras clave
 		st.subheader("Palabras clave")
 
-		c3, c4 = st.beta_columns([2, 1])
-		input_string2 = c3.text_input("Agregar palabra")
+		c3_4, c3_5 = st.beta_columns([2, 1])
+		input_string2 = c3_4.text_input("Agregar palabra")
 		state.inputs2.add(input_string2)
 
         # Obtiene el estado anterior del index
 		last_index2 = len(state.inputs2) - 1 if state.inputs2 else None
 
         # Selecciono la última entrada de acuerdo al index
-		c4.selectbox("Palabras agregadas", options=list(state.inputs2), index=last_index2)
+		c3_5.selectbox("Palabras agregadas", options=list(state.inputs2), index=last_index2)
 		lista_palabras=list(state.inputs2)
 		palabras_busqueda = st.multiselect("Seleccionar palabras",lista_palabras)
   
@@ -379,19 +420,19 @@ def main(state):
 		
 		today = datetime.date.today()
 		tomorrow = today + datetime.timedelta(days=1)
-		c5, c6 = st.beta_columns([1, 1])
+		c3_6, c3_7 = st.beta_columns([1, 1])
 
-		f_ini = c5.date_input('Fecha inicio', today)
-		f_fin = c6.date_input('Fecha final', tomorrow)
+		f_ini = c3_6.date_input('Fecha inicio', today)
+		f_fin = c3_7.date_input('Fecha final', tomorrow)
 
 		st.subheader("Detalles de la consulta")
-		c5, c6, c7 = st.beta_columns([1, 1, 1] )
-		c5.markdown('**Latitud**.')
-		c6.markdown('**Longitud**.')
-		c7.markdown('**Radio**.')
-		c5.write(input_lat)
-		c6.write(input_long)
-		c7.write(input_radio)
+		c3_8, c3_9, c3_10 = st.beta_columns([1, 1, 1] )
+		c3_8.markdown('**Latitud**.')
+		c3_9.markdown('**Longitud**.')
+		c3_10.markdown('**Radio**.')
+		c3_8.write(inputLat)
+		c3_9.write(inputLong)
+		c3_10.write(inputRadio)
 		if f_ini < f_fin:
 			st.success('Fecha inicio: `%s`\n\nFecha final:`%s`' % (f_ini, f_fin))
 		else:
@@ -402,8 +443,8 @@ def main(state):
 		if st.button('Extraer tweets'):
 			# Itero y aplico función
 			captura = {"username":[],"localizacion":[],"radio":[],"palabra_clave":[],"fecha":[],"contenido":[],"url":[]}
-			loc=str(input_lat)+", "+str(input_long)
-			radio=str(input_radio)
+			loc=str(inputLat)+", "+str(inputLong)
+			radio=str(inputRadio)
 
 			# Itero y aplico función
 			for i in range(0,len(palabras_busqueda)):
@@ -434,6 +475,94 @@ def main(state):
 			fig2, ax2 = plt.subplots()
 			ax2=sns.countplot(y="palabra_clave", hue="username", data=df1)   
 			col2.pyplot(fig2)
+
+
+#obtener_tweets_de_ciudad_palabras
+	elif choice == 'Twitter-ciudad':
+		st.subheader("Obtiene tweets desde un punto central en una ciudad, con un radio R y asociadas a una lista de palabras clave")
+
+		# ------ Input ciudad y radio
+		st.subheader("Localización")
+
+		c4_1, c4_2 = st.beta_columns([1, 1])
+		input_ciudad = c4_1.text_input("Ciudad")
+		input_radio = c4_2.text_input("Radio")+"km"
+
+		# ------ Input palabras clave
+		st.subheader("Palabras clave")
+
+		c4_4, c4_5 = st.beta_columns([2, 1])
+		input_string2 = c4_4.text_input("Agregar palabra")
+		state.inputs2.add(input_string2)
+
+        # Obtiene el estado anterior del index
+		last_index2 = len(state.inputs2) - 1 if state.inputs2 else None
+
+        # Selecciono la última entrada de acuerdo al index
+		c4_5.selectbox("Palabras agregadas", options=list(state.inputs2), index=last_index2)
+		lista_palabras=list(state.inputs2)
+		palabras_busqueda = st.multiselect("Seleccionar palabras",lista_palabras)
+  
+		# -----------------------------------
+		# ------ Input fechas
+		st.subheader("Rango de fechas")
+		
+		today = datetime.date.today()
+		tomorrow = today + datetime.timedelta(days=1)
+		c4_6, c4_7 = st.beta_columns([1, 1])
+
+		f_ini = c4_6.date_input('Fecha inicio', today)
+		f_fin = c4_7.date_input('Fecha final', tomorrow)
+
+		st.subheader("Detalles de la consulta")
+		c4_8, c4_9 = st.beta_columns([1, 1] )
+		c4_8.markdown('**Ciudad o punto central**.')
+		c4_9.markdown('**Radio**.')
+		c4_8.write(input_ciudad)
+		c4_9.write(input_radio)
+		if f_ini < f_fin:
+			st.success('Fecha inicio: `%s`\n\nFecha final:`%s`' % (f_ini, f_fin))
+		else:
+			st.error('Error: La fecha final debe ir después de la fecha inicial.')
+		# -----------------------------------
+
+		# ------- Botón analizar
+		if st.button('Extraer tweets'):
+			# Itero y aplico función
+			captura = {"username":[],"localizacion":[],"radio":[],"palabra_clave":[],"fecha":[],"contenido":[],"url":[]}
+			loc=str(input_ciudad)
+			radio=str(input_radio)
+
+			# Itero y aplico función
+			for i in range(0,len(palabras_busqueda)):
+				palabra=palabras_busqueda[i]
+				captura=obtener_tweets_de_ciudad_palabras(loc, radio,palabra,f_ini, f_fin,captura)
+				time.sleep(5)
+
+			df1=pd.DataFrame.from_dict(captura) 
+			st.write('Se encontraron ', len(df1), " tweets")
+  			# Imprimo resultado
+			st.dataframe(df1.head())
+			df = df1 # your dataframe
+			st.markdown(get_table_download_link(df), unsafe_allow_html=True)
+
+			# Gráficas
+			fig, ax = plt.subplots()
+			ax=sns.countplot("username", data=df)
+			st.pyplot(fig)
+
+			col1, col2 = st.beta_columns(2)
+
+			col1.subheader("Usuario - Palabra")
+			fig, ax = plt.subplots()
+			ax=sns.countplot(y="username", hue="palabra_clave", data=df1)
+			col1.pyplot(fig)
+
+			col2.subheader("Palabra - Usuario")
+			fig2, ax2 = plt.subplots()
+			ax2=sns.countplot(y="palabra_clave", hue="username", data=df1)   
+			col2.pyplot(fig2)
+
 	elif choice == 'test':
 		arr = np.random.normal(1, 1, size=100)
 		fig, ax = plt.subplots()
@@ -484,8 +613,12 @@ def main(state):
 			ax=sns.countplot("username", data=df)
 			st.pyplot(fig)
 
-	elif choice == 'About':
+	elif choice == 'Créditos':
 		st.subheader("Jorge O. Cifuentes")
+		body='<a href="https://www.quidlab.co">https://www.quidlab.co</a>'
+		st.markdown(body, unsafe_allow_html=True)
+		st.write('Email: *jorge@quidlab.co* :heart:')
+
 		st.text("")
 
 
