@@ -12,9 +12,11 @@ import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use("Agg")
 import seaborn as sns
+from facebook_scraper import get_posts
+
 
 # Parámetros
-activities = ["Seleccione", "Twitter-usuario","Twitter-término","Twitter-localizacion","EDA","Plot","Model Building","About", "test"]
+activities = ["Seleccione", "Twitter-usuario","Twitter-término","Twitter-localizacion","Facebook","About"]
 
 #Funciones
 
@@ -55,6 +57,7 @@ def obtener_tweets (cuenta,palabra,f_ini, f_fin, captura):
         date=str(tweet.date.year)+"-"+str(tweet.date.month)+"-"+str(tweet.date.day)+" "+str(tweet.date.hour)+":"+str(tweet.date.minute)+":"+str(tweet.date.second)
         captura['fecha'].append(date)
         captura['contenido'].append(tweet.content)
+        captura['url'].append(tweet.url)
     return captura
 
 # Obtener tweets de término principal y otros asociados
@@ -75,13 +78,14 @@ def obtener_tweets_de_termino(search,palabra,term_ppal, f_ini, f_fin, captura):
         date=str(tweet.date.year)+"-"+str(tweet.date.month)+"-"+str(tweet.date.day)+" "+str(tweet.date.hour)+":"+str(tweet.date.minute)+":"+str(tweet.date.second)
         captura['fecha'].append(date)
         captura['contenido'].append(tweet.content)
+        captura['url'].append(tweet.url)
     return captura
 
 def obtener_tweets_de_loc_palabras(loc, radio,palabra, f_ini, f_fin, captura):
 #captura = {"username":[],"localizacion":[],"radio":[],"palabra_clave":[],"fecha":[],"contenido":[]}
 	maxTweets = 5000
 	loc=str(loc)
-	radio=str(radio)
+	radio=str(radio)+"km"
 	palabra_clave=str(palabra)
 	fecha_ini=str(f_ini)
 	fecha_fin=str(f_fin)
@@ -97,9 +101,26 @@ def obtener_tweets_de_loc_palabras(loc, radio,palabra, f_ini, f_fin, captura):
 		date=str(tweet.date.year)+"-"+str(tweet.date.month)+"-"+str(tweet.date.day)+" "+str(tweet.date.hour)+":"+str(tweet.date.minute)+":"+str(tweet.date.second)
 		captura['fecha'].append(date)
 		captura['contenido'].append(tweet.content)
+        captura['url'].append(tweet.url)
+	return captura
+def obtener_post_facebook(cuenta_fb, paginas,captura):
+	#captura = {"username":[],"post_id":[],"textos":[],"date":[],"likes":[],"coments":[],"shares":[],"url":[]}
+	maxPosts = 3000
+	cuenta_fb=str(cuenta_fb)
+	paginas=int(paginas)
+	for i,post in enumerate(get_posts(cuenta_fb, pages=paginas)):
+		if i > maxPosts:
+			break
+		captura['username'].append(cuenta_fb)
+		captura['post_id'].append(post['post_id'])
+		captura['textos'].append(post['text'][:144])
+		captura['date'].append(post['time'])
+		captura['likes'].append(post['likes'])
+		captura['coments'].append(post['comments'])
+		captura['shares'].append(post['shares'])
+		captura['url'].append(post['post_url'])
 	return captura
 
-    
 #	palabra_list=[]
 #	df2 = pd.DataFrame()
 #	scraped_tweets = sntwitter.TwitterSearchScraper(search).get_items()
@@ -187,7 +208,7 @@ def main(state):
 		# ------- Botón analizar
 		if st.button('Extraer tweets'):
 			# Itero y aplico función
-			captura = {"username":[],"palabra":[],"fecha":[],"contenido":[]}
+			captura = {"username":[],"palabra":[],"fecha":[],"contenido":[],"url":[]}
 
 			for i in range(0,len(cuentas_twitter)):
 				for j in range(0,len(palabras_busqueda)):
@@ -279,7 +300,7 @@ def main(state):
 		# ------- Botón analizar
 		if st.button('Extraer tweets'):
 			# Itero y aplico función
-			captura = {"username":[],"termino_ppal":[],"palabra_clave":[],"fecha":[],"contenido":[]}
+			captura = {"username":[],"termino_ppal":[],"palabra_clave":[],"fecha":[],"contenido":[],"url":[]}
 
 			for i in range(0,len(terminos_ppales)):
 				for j in range(0,len(palabras_busqueda)):
@@ -333,9 +354,9 @@ def main(state):
 		st.subheader("Localización")
 
 		c1, c2, c3 = st.beta_columns([1, 1,1])
-		input_lat = c1.text_input("Latitud")
-		input_long = c2.text_input("Longitud")
-		input_radio = c3.text_input("Radio")
+		input_lat = c1.text_input("Latitud - Ej: 4.74075")
+		input_long = c2.text_input("Longitud - Ej: -74.08417"), 
+		input_radio = c3.text_input("Radio en km - Ej: 4")
 
 		# ------ Input palabras clave
 		st.subheader("Palabras clave")
@@ -380,7 +401,7 @@ def main(state):
 		# ------- Botón analizar
 		if st.button('Extraer tweets'):
 			# Itero y aplico función
-			captura = {"username":[],"localizacion":[],"radio":[],"palabra_clave":[],"fecha":[],"contenido":[]}
+			captura = {"username":[],"localizacion":[],"radio":[],"palabra_clave":[],"fecha":[],"contenido":[],"url":[]}
 			loc=str(input_lat)+", "+str(input_long)
 			radio=str(input_radio)
 
@@ -419,9 +440,52 @@ def main(state):
 		ax.hist(arr, bins=20)
 		st.pyplot(fig)
 
+	elif choice == 'Facebook':
+		st.subheader("Obtiene posts de una cuenta pública de facebook")
+
+		# ------ Input datos de usuarios
+		st.subheader("Usuarios")
+
+		c1, c2 = st.beta_columns([2, 1])
+		input_string = c1.text_input("Agregar usuario")
+		state.inputs1.add(input_string)
+
+        # Obtiene el estado anterior del index
+		last_index1 = len(state.inputs1) - 1 if state.inputs1 else None
+
+        # Selecciono la última entrada de acuerdo al index
+		c2.selectbox("Usuarios agregados", options=list(state.inputs1), index=last_index1)
+		lista_cuentas=list(state.inputs1)
+		cuentas_fb = st.multiselect("Seleccionar usuarios",lista_cuentas)
+		# -----------------------------------
+		# ------ Input páginas
+		paginas=st.text_input("Paginas")
+		# -----------------------------------
+
+		# ------- Botón analizar
+		if st.button('Extraer posts'):
+			# Parametros		
+			captura = {"username":[],"post_id":[],"textos":[],"date":[],"likes":[],"coments":[],"shares":[],"url":[]}
+
+			for i in range(0,len(cuentas_fb)):
+				cuenta_fb=cuentas_fb[i]
+				captura=obtener_post_facebook(cuenta_fb, paginas,captura)
+				time.sleep(5)
+
+			# Imprimo resultado
+			df1=pd.DataFrame.from_dict(captura) 
+			st.write('Se encontraron ', len(df1), " posts")
+			st.dataframe(df1.head())
+			df = df1 # your dataframe
+			st.markdown(get_table_download_link(df), unsafe_allow_html=True)
+
+			# Gráficas
+			fig, ax = plt.subplots()
+			ax=sns.countplot("username", data=df)
+			st.pyplot(fig)
 
 	elif choice == 'About':
-		st.subheader("About")
+		st.subheader("Jorge O. Cifuentes")
 		st.text("")
 
 
