@@ -51,7 +51,7 @@ def get_table_download_link(df):
 	"""
 	val = to_excel(df)
 	b64 = base64.b64encode(val).decode() # val looks like b'...'
-	href=f'<a href="data:application/octet-stream;base64,{b64}" target="_blank" download="hjj">Download csv file</a>' # decode b'abc' => abc	
+	href=f'<a href="data:application/octet-stream;base64,{b64}" target="_blank", download="hjj.xlsx">Download csv file</a>' # decode b'abc' => abc	
 	return href
 
 def get_table_download_link_csv(df):
