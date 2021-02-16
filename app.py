@@ -281,7 +281,7 @@ def main(state):
 			df = df1 # your dataframe
 			b64=get_table_download_link(df)
 			link=f'<a href="data:application/octet-stream;base64,{b64}" target="_blank" download="extract.xlsx">Download csv file</a>' # decode b'abc' => abc
-			st.markdown(get_table_download_link_csv(), unsafe_allow_html=True)
+			st.markdown(get_table_download_link_csv(df), unsafe_allow_html=True)
 
 			fig, ax = plt.subplots()
 			ax=sns.countplot("username", data=df)
