@@ -53,6 +53,14 @@ def get_table_download_link(df):
 	b64 = base64.b64encode(val).decode() # val looks like b'...'
 	return b64
 
+def get_table_download_link_csv(df):
+    """Generates a link allowing the data in a given panda dataframe to be downloaded
+    in:  dataframe
+    out: href string
+    """
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
+    href = f'<a href="data:file/csv;base64,{b64}">Download csv file</a>'
 
 # Obtener tweets de usuarios y palabras entre 2 fechas
 def obtener_tweets (cuenta,palabra,f_ini, f_fin, captura):
@@ -273,7 +281,7 @@ def main(state):
 			df = df1 # your dataframe
 			b64=get_table_download_link(df)
 			link=f'<a href="data:application/octet-stream;base64,{b64}" target="_blank" download="extract.xlsx">Download csv file</a>' # decode b'abc' => abc
-			st.markdown(link, unsafe_allow_html=True)
+			st.markdown(get_table_download_link_csv(), unsafe_allow_html=True)
 
 			fig, ax = plt.subplots()
 			ax=sns.countplot("username", data=df)
