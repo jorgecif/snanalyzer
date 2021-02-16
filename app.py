@@ -51,7 +51,8 @@ def get_table_download_link(df):
 	"""
 	val = to_excel(df)
 	b64 = base64.b64encode(val).decode() # val looks like b'...'
-	return b64
+	href=f'<a href="data:application/octet-stream;base64,{b64}" download="extract.xlsx" target="_blank">Download csv file</a>' # decode b'abc' => abc	
+	return href
 
 def get_table_download_link_csv(df):
     """Generates a link allowing the data in a given panda dataframe to be downloaded
@@ -280,9 +281,7 @@ def main(state):
   			# Imprimo resultado
 			st.dataframe(df1.head())
 			df = df1 # your dataframe
-			b64=get_table_download_link(df)
-			link=f'<a href="data:application/octet-stream;base64,{b64}" target="_blank" download="extract.xlsx">Download csv file</a>' # decode b'abc' => abc
-			st.markdown(get_table_download_link_csv(df), unsafe_allow_html=True)
+			st.markdown(get_table_download_link(df), unsafe_allow_html=True)
 
 			fig, ax = plt.subplots()
 			ax=sns.countplot("username", data=df)
