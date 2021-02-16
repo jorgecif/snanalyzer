@@ -39,7 +39,7 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 def to_excel(df):
 	output = BytesIO()
 	writer = pd.ExcelWriter(output, engine='xlsxwriter', options = {'remove_timezone': True})
-	df.to_excel(writer, sheet_name='Sheet1')
+	df.to_excel(writer, index= False, sheet_name='Sheet1')
 	writer.save()
 	processed_data = output.getvalue()
 	return processed_data
@@ -52,7 +52,6 @@ def get_table_download_link(df):
 	val = to_excel(df)
 	b64 = base64.b64encode(val).decode() # val looks like b'...'
 	return b64
-
 
 
 # Obtener tweets de usuarios y palabras entre 2 fechas
