@@ -273,7 +273,7 @@ def main(state):
 			st.dataframe(df1.head())
 			df = df1 # your dataframe
 			b64=get_table_download_link(df)
-			link=f'<a href="data:application/octet-stream;base64,{b64}" download="extract.xlsx">Download csv file</a>' # decode b'abc' => abc
+			link=f'<a href="data:application/octet-stream;base64,{b64}" target="_blank" download="extract.xlsx">Download csv file</a>' # decode b'abc' => abc
 			st.markdown(link, unsafe_allow_html=True)
 
 			fig, ax = plt.subplots()
