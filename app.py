@@ -307,7 +307,7 @@ def main(state):
 			df_download
 			csv = df_download.to_csv(index=False)
 			b64 = base64.b64encode(csv.encode()).decode()  # some strings
-			linko= f'<a href="data:file/csv;base64,{b64}" download="myfilename.csv">Download csv file</a>'
+			linko= f'<a href="data:file/csv;base64,{b64}" target="_blank" download="myfilename.csv">Download csv file</a>'
 			st.markdown(linko, unsafe_allow_html=True)			
 			
 	elif choice == 'Twitter-término':
