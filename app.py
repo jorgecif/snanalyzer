@@ -269,7 +269,7 @@ def main(state):
   			# Imprimo resultado
 			st.dataframe(df1)
 			df = df1 # your dataframe
-			st.markdown(get_table_download_link_csv(df), unsafe_allow_html=True)
+			st.markdown(get_table_download_link(df), unsafe_allow_html=True)
 
 			fig, ax = plt.subplots()
 			ax=sns.countplot("username", data=df)
