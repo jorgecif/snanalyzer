@@ -63,7 +63,7 @@ def get_table_download_link_csv(df):
     csv = df.to_csv().encode()
     #b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
     b64 = base64.b64encode(csv).decode()
-    href = f'<a href="data:file/csv;base64,{b64}" target="_blank">Download csv file</a>'
+    href = f'<a href="data:file/csv;base64,{b64}" download="captura.csv" target="_blank">Download csv file</a>'
     return href
 
 # Obtener tweets de usuarios y palabras entre 2 fechas
@@ -379,21 +379,7 @@ def main(state):
 			ax2=sns.countplot(y="palabra_clave", hue="termino_ppal", data=df1)   
 			col2.pyplot(fig2)
    
-			# Parametros
-#			palabras_busqueda = ['seguridad', "educacion", "participacion", "delito", "crimen", "colegio"]
-#			cantidad_tweets=100
-#			termino_principal = '"localidad suba"'
-#			df2 = pd.DataFrame()
-#
-#			# Itero y aplico función
-#			for i in range(0,len(palabras_busqueda)):
-#				palabra=palabras_busqueda[i]
-#				search=termino_principal + ' + ' + palabra 
-#				dataframe=obtener_tweets_de_termino(search,cantidad_tweets,palabra)
-#				df2=df2.append(dataframe, ignore_index = True) 
-#				print(search)
-#				time.sleep(5)
-#
+
 		# -----------------------------------
 	elif choice == 'Twitter-coordenadas':
 		st.subheader("Obtiene tweets de un punto central en unas coordenadas con un radio R y asociadas a una lista de palabras clave")
